@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading"><div><div class="eyebrow">Overview</div><h1>Good morning, Jordan.</h1><p>Here is your sales workspace at a glance.</p></div><div class="date-chip"><span class="calendar-icon"></span> September 2026</div></section>
+<section class="metric-grid" aria-label="Sales metrics">
+    <article class="metric-card accent-teal"><div class="metric-top"><span>Total Sales</span><span class="metric-icon sales-icon">$</span></div><strong>$0.00</strong><small>Awaiting data</small></article>
+    <article class="metric-card accent-blue"><div class="metric-top"><span>Total Orders</span><span class="metric-icon orders-icon">#</span></div><strong>0</strong><small>Awaiting data</small></article>
+    <article class="metric-card accent-orange"><div class="metric-top"><span>Total Customers</span><span class="metric-icon customers-icon">◎</span></div><strong>0</strong><small>Awaiting data</small></article>
+    <article class="metric-card accent-purple"><div class="metric-top"><span>Total Products</span><span class="metric-icon products-icon">□</span></div><strong>0</strong><small>Awaiting data</small></article>
+    <article class="metric-card forecast-card"><div class="metric-top"><span>Forecasted Sales</span><span class="metric-icon forecast-icon">↗</span></div><strong>—</strong><small>Available in a later phase</small></article>
+</section>
+<section class="dashboard-lower"><div class="chart-placeholder large-placeholder"><div class="placeholder-heading"><div><div class="panel-kicker">Performance</div><h2>Sales over time</h2></div><span class="future-tag">Coming soon</span></div><div class="empty-chart"><span class="chart-placeholder-icon"></span><strong>Your sales chart will appear here</strong><p>Connect your sales data to begin exploring trends.</p></div></div><div class="chart-placeholder"><div class="placeholder-heading"><div><div class="panel-kicker">Breakdown</div><h2>Sales by category</h2></div><span class="future-tag">Coming soon</span></div><div class="empty-chart compact"><span class="pie-placeholder-icon"></span><strong>Category insights</strong><p>Placeholder for a future chart.</p></div></div></section>
+{% endblock %}

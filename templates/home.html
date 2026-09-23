@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="welcome-section">
+    <div class="eyebrow">Sales intelligence workspace</div>
+    <h1>See the signal<br><span>behind every sale.</span></h1>
+    <p class="lead">A focused home for understanding performance, preparing data, and making better business decisions.</p>
+    <div class="welcome-actions"><a class="primary-button" href="{{ url_for('dashboard') }}">Open dashboard <span>&rarr;</span></a><a class="text-button" href="{{ url_for('upload_data') }}">Prepare data</a></div>
+</section>
+<section class="home-grid">
+    <div class="intro-panel"><div class="panel-kicker">Project status</div><h2>Your analytics foundation is ready.</h2><p>The core workspace is set up for the next stages of your AI/ML project. Explore the navigation to see each planned area.</p><div class="progress-line"><span></span></div><div class="progress-meta"><span>Day 1 of 10</span><strong>Foundation complete</strong></div></div>
+    <div class="quick-links"><div class="panel-kicker">Quick access</div><a href="{{ url_for('dashboard') }}"><span class="quick-icon chart-icon"></span><span><strong>Dashboard overview</strong><small>Review your key metrics</small></span><span class="arrow">&rarr;</span></a><a href="{{ url_for('upload_data') }}"><span class="quick-icon upload-icon"></span><span><strong>Upload data</strong><small>Get your workspace ready</small></span><span class="arrow">&rarr;</span></a></div>
+</section>
+{% endblock %}

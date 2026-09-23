@@ -1,0 +1,6 @@
+order_id,order_date,customer_name,product_name,category,quantity,unit_price,total_amount
+1001,2026-01-05,Avery Retail,Wireless Headphones,Electronics,2,79.99,159.98
+1002,2026-01-08,Northstar Office,Desk Lamp,Office,5,34.50,172.50
+1003,2026-01-12,Greenfield Market,Notebook Set,Stationery,10,12.00,120.00
+1004,2026-01-18,Avery Retail,USB-C Hub,Electronics,3,45.00,135.00
+1005,2026-01-24,Harbor Cafe,Tablet Stand,Office,4,28.75,115.00
