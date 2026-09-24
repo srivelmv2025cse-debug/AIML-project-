@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading simple-heading"><div><div class="eyebrow">Day 2 data workspace</div><h1>Upload Data</h1><p>Import a sales dataset, inspect its quality, and save a cleaned copy for future analysis.</p></div></section>
+
+{% if error %}<div class="notice error-notice"><strong>Upload not completed</strong><span>{{ error }}</span></div>{% endif %}
+{% if success %}<div class="notice success-notice"><strong>Processing complete</strong><span>{{ success }} Saved as <b>{{ processed_name }}</b> in <code>data/processed/</code>.</span></div>{% endif %}
+
+{% if not summary and not success %}
+<section class="upload-card">
+    <div class="upload-card-header"><div><div class="panel-kicker">Supported formats</div><h2>Bring in your sales data</h2><p>CSV, Excel XLSX, or JSON files up to 10 MB.</p></div><div class="upload-mark">↑</div></div>
+    <form class="upload-form" method="post" enctype="multipart/form-data">
+        <label class="file-drop" for="dataset"><span class="upload-cloud">↑</span><strong>Choose a dataset to inspect</strong><span>Click to browse your computer</span><small>CSV, XLSX, JSON · Maximum 10 MB</small><input id="dataset" name="dataset" type="file" accept=".csv,.xlsx,.json, text/csv, application/json, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></label>
+        <button class="primary-button" type="submit">Upload and inspect <span>→</span></button>
+    </form>
+</section>
+{% endif %}
+
+{% if summary %}
+<section class="dataset-header"><div><div class="panel-kicker">Inspection complete</div><h2>{{ original_name }}</h2><p>Review the detected fields, then confirm preprocessing to save a cleaned dataset.</p></div><a class="text-button" href="{{ url_for('upload_data') }}">Upload another file</a></section>
+<div class="data-stats"><div><span>Rows</span><strong>{{ summary.rows }}</strong></div><div><span>Columns</span><strong>{{ summary.columns }}</strong></div><div><span>Missing values</span><strong>{{ summary.missing_values.values() | sum }}</strong></div><div><span>Duplicate rows</span><strong>{{ summary.duplicate_rows }}</strong></div></div>
+<section class="data-layout">
+    <div class="data-panel preview-panel"><div class="panel-title"><div><div class="panel-kicker">Preview</div><h2>First {{ [15, summary.rows] | min }} rows</h2></div><span class="future-tag">Read-only preview</span></div><div class="table-scroll">{{ preview | safe }}</div></div>
+    <div class="data-panel mapping-panel"><div class="panel-kicker">Column mapping</div><h2>Tell us what each field means</h2><p class="mapping-help">We made a best-effort match. Adjust any field before preprocessing.</p><form method="post" action="{{ url_for('process_upload') }}"><input type="hidden" name="stored_name" value="{{ stored_name }}"><input type="hidden" name="original_name" value="{{ original_name }}">
+        {% for field in ['date', 'product', 'product_id', 'category', 'quantity', 'price', 'sales', 'customer_id', 'region', 'discount', 'inventory'] %}<label class="mapping-row"><span>{{ field | replace('_', ' ') | title }}</span><select name="{{ field }}"><option value="">Not mapped</option>{% for column in columns %}<option value="{{ column }}" {% if detected.get(field) == column %}selected{% endif %}>{{ column }}</option>{% endfor %}</select></label>{% endfor %}
+        <button class="primary-button" type="submit">Clean and save dataset <span>→</span></button>
+    </form></div>
+</section>
+<section class="data-panel quality-panel"><div class="panel-title"><div><div class="panel-kicker">Data quality</div><h2>Column details</h2></div></div><div class="quality-grid">{% for column in summary.column_names %}<div class="quality-item"><strong>{{ column }}</strong><span>{{ summary.data_types[column] }}</span><small>{{ summary.missing_values[column] }} missing</small></div>{% endfor %}</div></section>
+{% endif %}
+{% if success %}<section class="data-panel saved-panel"><div class="saved-icon">✓</div><div><div class="panel-kicker">Ready for the next phase</div><h2>Clean dataset saved</h2><p>Missing values were handled, duplicate rows removed, mapped dates converted, and numeric fields validated.</p></div></section>{% endif %}
+{% endblock %}

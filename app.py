@@ -1,13 +1,40 @@
 from pathlib import Path
 import sqlite3
+from uuid import uuid4
 
-from flask import Flask, g, render_template
+from flask import Flask, g, redirect, render_template, request, url_for
+from werkzeug.utils import secure_filename
+
+from services.data_processing import (
+    MAX_UPLOAD_BYTES,
+    clean_dataset,
+    dataframe_summary,
+    detect_columns,
+    file_extension,
+    read_dataset,
+    save_dataset,
+    validate_upload,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "database" / "sales_forecasting.db"
+UPLOADS_DIR = BASE_DIR / "data" / "uploads"
+PROCESSED_DIR = BASE_DIR / "data" / "processed"
 
 app = Flask(__name__)
 app.config["DATABASE"] = DATABASE_PATH
+app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
+app.config["SECRET_KEY"] = "day-2-local-development-key"
+
+
+@app.errorhandler(413)
+def upload_too_large(_error):
+    return render_template(
+        "upload_data.html",
+        active_page="upload",
+        page_title="Upload Data",
+        error="The file is too large. The maximum upload size is 10 MB.",
+    ), 413
 
 PAGES = {
     "home": {"label": "Home", "endpoint": "home", "icon": "house"},
@@ -73,9 +100,81 @@ def dashboard():
     return render_template("dashboard.html", active_page="dashboard", page_title="Dashboard")
 
 
-@app.route("/upload-data")
+@app.route("/upload-data", methods=["GET", "POST"])
 def upload_data():
-    return render_template("page.html", active_page="upload", page_title="Upload Data", description="Prepare your sales data workspace for a future import workflow.")
+    if request.method == "GET":
+        return render_template("upload_data.html", active_page="upload", page_title="Upload Data")
+
+    uploaded_file = request.files.get("dataset")
+    try:
+        filename = uploaded_file.filename if uploaded_file else ""
+        extension = validate_upload(filename, request.content_length)
+        safe_name = secure_filename(filename)
+        if not safe_name:
+            raise ValueError("The file name is not valid.")
+        UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+        stored_path = UPLOADS_DIR / f"{uuid4().hex}_{safe_name}"
+        uploaded_file.save(stored_path)
+        dataframe = read_dataset(stored_path, extension)
+        if dataframe.empty and len(dataframe.columns) == 0:
+            raise ValueError("The uploaded dataset does not contain any columns.")
+        summary = dataframe_summary(dataframe)
+        detected = detect_columns(dataframe.columns)
+        return render_template(
+            "upload_data.html",
+            active_page="upload",
+            page_title="Upload Data",
+            summary=summary,
+            detected=detected,
+            columns=list(dataframe.columns),
+            preview=dataframe.head(15).fillna("").to_html(classes="preview-table", index=False, border=0),
+            stored_name=stored_path.name,
+            original_name=filename,
+        )
+    except Exception as error:
+        if "stored_path" in locals() and stored_path.exists():
+            stored_path.unlink()
+        return render_template(
+            "upload_data.html",
+            active_page="upload",
+            page_title="Upload Data",
+            error=str(error),
+        ), 400
+
+
+@app.route("/upload-data/process", methods=["POST"])
+def process_upload():
+    stored_name = request.form.get("stored_name", "")
+    if not stored_name or Path(stored_name).name != stored_name:
+        return redirect(url_for("upload_data"))
+
+    stored_path = UPLOADS_DIR / stored_name
+    try:
+        extension = file_extension(stored_name)
+        dataframe = read_dataset(stored_path, extension)
+        mapping = {field: request.form.get(field, "") for field in (
+            "date", "product", "product_id", "category", "quantity", "price", "sales",
+            "customer_id", "region", "discount", "inventory",
+        )}
+        cleaned = clean_dataset(dataframe, mapping)
+        output_name = f"cleaned_{Path(stored_name).stem}.csv"
+        output_path = PROCESSED_DIR / output_name
+        save_dataset(cleaned, output_path)
+        return render_template(
+            "upload_data.html",
+            active_page="upload",
+            page_title="Upload Data",
+            success=f"{request.form.get('original_name', stored_name)} was cleaned and saved successfully.",
+            processed_name=output_name,
+            cleaned_summary=dataframe_summary(cleaned),
+        )
+    except Exception as error:
+        return render_template(
+            "upload_data.html",
+            active_page="upload",
+            page_title="Upload Data",
+            error=f"The dataset could not be processed: {error}",
+        ), 400
 
 
 @app.route("/forecasting")
