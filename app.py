@@ -15,6 +15,7 @@ from services.data_processing import (
     save_dataset,
     validate_upload,
 )
+from services.analytics import analyze_dataset, latest_cleaned_dataset
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "database" / "sales_forecasting.db"
@@ -97,7 +98,9 @@ def home():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", active_page="dashboard", page_title="Dashboard")
+    _path, dataframe = latest_cleaned_dataset(PROCESSED_DIR)
+    analysis = analyze_dataset(dataframe) if dataframe is not None else {"error": "Upload and clean a dataset to populate the dashboard."}
+    return render_template("dashboard.html", active_page="dashboard", page_title="Dashboard", analysis=analysis)
 
 
 @app.route("/upload-data", methods=["GET", "POST"])
@@ -184,7 +187,9 @@ def forecasting():
 
 @app.route("/analytics")
 def analytics():
-    return render_template("page.html", active_page="analytics", page_title="Analytics", description="Your future analytics workspace is ready for data-driven views.")
+    _path, dataframe = latest_cleaned_dataset(PROCESSED_DIR)
+    analysis = analyze_dataset(dataframe) if dataframe is not None else {"error": "Upload and clean a dataset to open business analytics."}
+    return render_template("analytics.html", active_page="analytics", page_title="Analytics", analysis=analysis)
 
 
 @app.route("/customers")

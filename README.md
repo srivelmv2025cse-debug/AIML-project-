@@ -56,7 +56,11 @@ Day 1 establishes the Flask application foundation and a clean navigation UI. Da
 
 Open **Upload Data** in the sidebar and upload a CSV, XLSX, or JSON dataset up to 10 MB. The application validates the file, stores the original with a generated safe name in `data/uploads/`, reads it with pandas, shows quality statistics and a 15-row preview, detects common sales fields, and provides a mapping form. Confirming the form removes duplicates, handles missing values, converts mapped dates and numeric fields, and saves a cleaned CSV in `data/processed/`.
 
-Day 2 does not include forecasting, analytics dashboards, customer segmentation, sentiment analysis, or report generation.
+## Day 3 Business Analytics
+
+The Dashboard and Analytics pages now load the newest cleaned CSV from `data/processed/`. They calculate total sales, orders, customers, products, average order value, and month-over-month sales growth. Chart.js renders daily, monthly, product, category, and regional sales charts. The analytics view also reports increasing, decreasing, or stable trends, monthly and (when enough dates exist) weekly patterns, generated insights, and daily anomalies detected with Isolation Forest.
+
+If the cleaned dataset does not contain a mapped date or sales/revenue field, the pages show a clear data requirement message. Forecasting and customer ML modules remain reserved for later days.
 
 ## Git Commands
 
