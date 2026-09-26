@@ -16,6 +16,7 @@ from services.data_processing import (
     validate_upload,
 )
 from services.analytics import analyze_dataset, latest_cleaned_dataset
+from services.forecasting import latest_forecast, load_forecast, save_forecast
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "database" / "sales_forecasting.db"
@@ -100,7 +101,8 @@ def home():
 def dashboard():
     _path, dataframe = latest_cleaned_dataset(PROCESSED_DIR)
     analysis = analyze_dataset(dataframe) if dataframe is not None else {"error": "Upload and clean a dataset to populate the dashboard."}
-    return render_template("dashboard.html", active_page="dashboard", page_title="Dashboard", analysis=analysis)
+    forecast = load_forecast(PROCESSED_DIR)
+    return render_template("dashboard.html", active_page="dashboard", page_title="Dashboard", analysis=analysis, forecast=forecast)
 
 
 @app.route("/upload-data", methods=["GET", "POST"])
@@ -182,7 +184,12 @@ def process_upload():
 
 @app.route("/forecasting")
 def forecasting():
-    return render_template("page.html", active_page="forecasting", page_title="Forecasting", description="Forecasting tools will be introduced in a later development phase.")
+    aggregation = request.args.get("aggregation", "monthly")
+    horizon = request.args.get("horizon", "3")
+    result = latest_forecast(PROCESSED_DIR, aggregation, horizon)
+    if not result.get("error"):
+        save_forecast(result, PROCESSED_DIR / "forecast_results.json")
+    return render_template("forecasting.html", active_page="forecasting", page_title="Forecasting", forecast=result)
 
 
 @app.route("/analytics")

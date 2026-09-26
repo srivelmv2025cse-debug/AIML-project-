@@ -62,6 +62,12 @@ The Dashboard and Analytics pages now load the newest cleaned CSV from `data/pro
 
 If the cleaned dataset does not contain a mapped date or sales/revenue field, the pages show a clear data requirement message. Forecasting and customer ML modules remain reserved for later days.
 
+## Day 4 Sales Forecasting
+
+The **Forecasting** page prepares the latest cleaned uploaded dataset by aggregating sales daily, weekly, or monthly. It uses ARIMA through `statsmodels` when enough historical observations are available, evaluates the model with MAE, RMSE, and MAPE on a holdout period, and displays historical and predicted sales together. Prophet is detected and used only when already available in the environment; otherwise it is listed as skipped without breaking the application. Successful forecasts are saved to `data/processed/forecast_results.json` and the Dashboard displays the saved forecast total.
+
+The sample dataset has only five dated rows, so it correctly shows an insufficient-history message instead of producing fake predictions. Forecasting does not include LSTM, customer segmentation, churn prediction, or report generation.
+
 ## Git Commands
 
 ```powershell

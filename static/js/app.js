@@ -36,4 +36,13 @@ document.addEventListener("DOMContentLoaded", () => {
         makeChart("productSalesChart", "bar", window.dashboardCharts.product, "Product sales");
         makeChart("regionSalesChart", "bar", window.dashboardCharts.region, "Regional sales");
     }
+
+    if (window.Chart && window.forecastData && !window.forecastData.error) {
+        const historical = window.forecastData.historical;
+        const predicted = window.forecastData.forecast;
+        const labels = historical.labels.concat(predicted.labels);
+        const historicalValues = historical.values.concat(new Array(predicted.values.length).fill(null));
+        const predictedValues = new Array(Math.max(historical.values.length - 1, 0)).fill(null).concat([historical.values[historical.values.length - 1]].concat(predicted.values));
+        new Chart(document.getElementById("forecastChart"), { type: "line", data: { labels, datasets: [{ label: "Historical sales", data: historicalValues, borderColor: "#187f78", backgroundColor: "rgba(24, 127, 120, .1)", fill: true, tension: .3 }, { label: `${window.forecastData.best_model} prediction`, data: predictedValues, borderColor: "#e79252", borderDash: [6, 5], pointRadius: 3, tension: .3 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, scales: { y: { beginAtZero: true, grid: { color: "#edf1f1" } }, x: { grid: { display: false } } } } });
+    }
 });
