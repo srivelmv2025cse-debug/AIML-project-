@@ -43,6 +43,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const labels = historical.labels.concat(predicted.labels);
         const historicalValues = historical.values.concat(new Array(predicted.values.length).fill(null));
         const predictedValues = new Array(Math.max(historical.values.length - 1, 0)).fill(null).concat([historical.values[historical.values.length - 1]].concat(predicted.values));
-        new Chart(document.getElementById("forecastChart"), { type: "line", data: { labels, datasets: [{ label: "Historical sales", data: historicalValues, borderColor: "#187f78", backgroundColor: "rgba(24, 127, 120, .1)", fill: true, tension: .3 }, { label: `${window.forecastData.best_model} prediction`, data: predictedValues, borderColor: "#e79252", borderDash: [6, 5], pointRadius: 3, tension: .3 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, scales: { y: { beginAtZero: true, grid: { color: "#edf1f1" } }, x: { grid: { display: false } } } } });
+        new Chart(document.getElementById("forecastChart"), { type: "line", data: { labels, datasets: [{ label: "Historical sales", data: historicalValues, borderColor: "#187f78", backgroundColor: "rgba(24, 127, 120, .1)", fill: true, tension: .3 }, { label: "Ensemble prediction", data: predictedValues, borderColor: "#e79252", borderDash: [6, 5], pointRadius: 3, tension: .3 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, scales: { y: { beginAtZero: true, grid: { color: "#edf1f1" } }, x: { grid: { display: false } } } } });
+
+        const availableModels = window.forecastData.models.filter((model) => model.available);
+        const comparisonCanvas = document.getElementById("modelComparisonChart");
+        if (comparisonCanvas) new Chart(comparisonCanvas, { type: "bar", data: { labels: availableModels.map((model) => model.name).concat("Ensemble"), datasets: [{ label: "MAE", data: availableModels.map((model) => model.metrics.mae).concat(window.forecastData.ensemble_metrics.mae), backgroundColor: "#187f78" }, { label: "RMSE", data: availableModels.map((model) => model.metrics.rmse).concat(window.forecastData.ensemble_metrics.rmse), backgroundColor: "#e79252" }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true } } } });
+
+        const scenarioCanvas = document.getElementById("scenarioChart");
+        if (scenarioCanvas) {
+            const scenarioColors = { "Best Case": "#187f78", "Expected Case": "#5f9eb7", "Worst Case": "#d45d5d" };
+            new Chart(scenarioCanvas, { type: "line", data: { labels: window.forecastData.forecast.labels, datasets: Object.entries(window.forecastData.scenarios).map(([name, scenario]) => ({ label: `${name} (simulated)`, data: scenario.values, borderColor: scenarioColors[name], backgroundColor: "transparent", tension: .3 })) }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } } });
+        }
     }
 });

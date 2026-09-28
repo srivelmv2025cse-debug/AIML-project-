@@ -186,7 +186,11 @@ def process_upload():
 def forecasting():
     aggregation = request.args.get("aggregation", "monthly")
     horizon = request.args.get("horizon", "3")
-    result = latest_forecast(PROCESSED_DIR, aggregation, horizon)
+    assumptions = {
+        name: request.args.get(name)
+        for name in ("demand_increase", "demand_decrease", "price_change", "promotion_effect")
+    }
+    result = latest_forecast(PROCESSED_DIR, aggregation, horizon, assumptions)
     if not result.get("error"):
         save_forecast(result, PROCESSED_DIR / "forecast_results.json")
     return render_template("forecasting.html", active_page="forecasting", page_title="Forecasting", forecast=result)
