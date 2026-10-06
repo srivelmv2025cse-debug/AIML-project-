@@ -18,7 +18,15 @@
     <div class="chart-placeholder large-placeholder"><div class="placeholder-heading"><div><div class="panel-kicker">Performance</div><h2>Daily sales</h2></div><span class="trend-badge trend-{{ analysis.trend | lower }}">{{ analysis.trend }}</span></div><div class="chart-box"><canvas id="dailySalesChart" aria-label="Daily sales chart"></canvas></div></div>
     <div class="chart-placeholder"><div class="placeholder-heading"><div><div class="panel-kicker">Breakdown</div><h2>Sales by category</h2></div></div><div class="chart-box"><canvas id="categorySalesChart" aria-label="Sales by category chart"></canvas></div></div>
 </section>
+<section class="dashboard-lower customer-dashboard-row">
+    {% if customer_analysis.segmentation.available %}
+    <div class="chart-placeholder"><div class="placeholder-heading"><div><div class="panel-kicker">Customer analytics</div><h2>Customer segments</h2></div><a class="text-button" href="{{ url_for('customers') }}">Explore →</a></div><div class="chart-box"><canvas id="dashboardCustomerSegmentsChart" aria-label="Customer counts by segment"></canvas></div></div>
+    {% else %}
+    <div class="notice customer-dashboard-notice"><strong>Customer chart unavailable</strong><span>{{ customer_analysis.segmentation.message }} <a href="{{ url_for('customers') }}">Open customer analytics</a></span></div>
+    {% endif %}
+</section>
 <script>window.dashboardCharts = {{ analysis.charts | tojson }};</script>
+{% if customer_analysis.segmentation.available %}<script>window.dashboardCustomerSegments = {{ customer_analysis.segmentation.cluster_sizes | tojson }};</script>{% endif %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 {% endif %}
 {% endblock %}

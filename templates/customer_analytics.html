@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading"><div><div class="eyebrow">Day 6 customer intelligence</div><h1>Customer Analytics</h1><p>Behavior segments and inactivity risk calculated from your latest cleaned transactions.</p></div></section>
+
+{% set segmentation = customer_analysis.segmentation %}
+{% set churn = customer_analysis.churn %}
+<section class="customer-section">
+    <div class="customer-section-heading"><div><div class="panel-kicker">K-Means segmentation</div><h2>Customer groups</h2></div>{% if segmentation.available %}<span class="future-tag">{{ segmentation.cluster_count }} clusters · {{ segmentation.customer_count }} customers</span>{% endif %}</div>
+    {% if segmentation.available %}
+    <div class="customer-summary-grid"><div><span class="panel-kicker">Customers grouped</span><strong>{{ segmentation.customer_count }}</strong></div><div><span class="panel-kicker">Clusters found</span><strong>{{ segmentation.cluster_count }}</strong></div><div><span class="panel-kicker">Features used</span><strong>{{ segmentation.feature_labels | join(', ') }}</strong></div></div>
+    <div class="customer-visual-grid">
+        <div class="chart-placeholder customer-chart-panel"><div class="placeholder-heading"><div><div class="panel-kicker">Segment sizes</div><h2>Customers per group</h2></div></div><div class="chart-box"><canvas id="customerSegmentSizesChart" aria-label="Customer counts by cluster"></canvas></div></div>
+        <div class="chart-placeholder customer-chart-panel"><div class="placeholder-heading"><div><div class="panel-kicker">Behavior map</div><h2>Recency and order value</h2></div></div><div class="chart-box"><canvas id="customerScatterChart" aria-label="Customer recency against average order value"></canvas></div><p class="muted-copy">Recent customers appear lower on this plot. {% if segmentation.scatter_truncated %}Showing the first 500 customers.{% endif %}</p></div>
+    </div>
+    <div class="customer-cluster-grid">
+        {% for cluster in segmentation.clusters %}
+        <article class="customer-cluster"><div class="cluster-heading"><h3>{{ cluster.label }}</h3><span>{{ cluster.size }} customers · {{ cluster.share }}%</span></div><p>{{ cluster.description }}</p><dl>{% for characteristic in cluster.characteristics %}<div><dt>{{ characteristic.label }}</dt><dd>{{ characteristic.value }}</dd></div>{% endfor %}</dl></article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="notice error-notice"><strong>Segmentation unavailable</strong><span>{{ segmentation.message }}</span></div>
+    {% endif %}
+</section>
+
+<section class="customer-section churn-section">
+    <div class="customer-section-heading"><div><div class="panel-kicker">Churn prediction</div><h2>Inactivity risk</h2></div>{% if churn.available %}<span class="future-tag">{{ churn.horizon_days }}-day inactivity window</span>{% endif %}</div>
+    {% if churn.available %}
+    <p class="muted-copy">Logistic Regression and Random Forest learn from historical customer snapshots labeled by observed inactivity. Customer risk is the mean of both model probabilities.</p>
+    <div class="risk-count-grid">{% for level in ['Low', 'Medium', 'High'] %}<div class="risk-count risk-{{ level | lower }}"><span>{{ level }} risk</span><strong>{{ churn.risk_counts[level] }}</strong><small>customers</small></div>{% endfor %}</div>
+    <div class="customer-model-grid">{% for model in churn.models %}<article class="customer-model"><div class="panel-kicker">Classifier</div><h3>{{ model.name }}</h3><div class="model-risk-summary">{% for level in ['Low', 'Medium', 'High'] %}<span class="risk-label risk-{{ level | lower }}">{{ level }} {{ model.risk_counts[level] }}</span>{% endfor %}</div></article>{% endfor %}</div>
+    <div class="customer-visual-grid churn-details-grid">
+        <div class="data-panel customer-table-panel"><div class="panel-title"><div><div class="panel-kicker">Model output</div><h2>Customers by predicted risk</h2></div></div><div class="table-scroll"><table class="analytics-table"><thead><tr><th>Customer</th><th>Risk</th><th>Combined</th><th>Logistic</th><th>Random forest</th></tr></thead><tbody>{% for customer in churn.customers[:100] %}<tr><td>{{ customer.customer }}</td><td><span class="risk-label risk-{{ customer.risk | lower }}">{{ customer.risk }}</span></td><td>{{ customer.probability }}%</td><td>{{ customer.logistic_probability }}%</td><td>{{ customer.forest_probability }}%</td></tr>{% endfor %}</tbody></table></div>{% if churn.customers | length > 100 %}<p class="muted-copy">Showing the 100 highest-risk customers of {{ churn.customer_count }}.</p>{% endif %}</div>
+        <div class="data-panel customer-factors-panel"><div class="panel-kicker">Important churn factors</div><h2>Signals learned from history</h2><div class="factor-list">{% for factor in churn.factors %}<div class="factor-row"><div><strong>{{ factor.feature }}</strong><span>{{ factor.direction }}</span></div><b>{{ factor.importance }}%</b></div>{% endfor %}</div></div>
+    </div>
+    {% else %}
+    <div class="notice error-notice"><strong>Churn model unavailable</strong><span>{{ churn.message }}</span></div>
+    {% endif %}
+</section>
+
+{% if segmentation.available or churn.available %}
+<script>window.customerAnalytics = { segmentation: {{ segmentation | tojson }}, churn: {{ churn | tojson }} };</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endif %}
+{% endblock %}

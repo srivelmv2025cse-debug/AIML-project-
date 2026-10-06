@@ -1,6 +1,6 @@
 # AI-Powered Sales Forecasting and Business Analytics Using Machine Learning
 
-Day 1 establishes the Flask application foundation and navigation UI. Day 2 adds secure data upload and preprocessing. Days 3–5 add data-backed business analytics, sales forecasting, and simulated scenario analysis. Customer segmentation, churn prediction, and report generation are not implemented.
+Day 1 establishes the Flask application foundation and navigation UI. Day 2 adds secure data upload and preprocessing. Days 3–5 add data-backed business analytics, sales forecasting, and simulated scenario analysis. Day 6 adds customer segmentation and churn-risk modeling. Report generation is not implemented.
 
 ## Project Structure
 
@@ -8,8 +8,7 @@ Day 1 establishes the Flask application foundation and navigation UI. Day 2 adds
 .
 |-- app.py
 |-- requirements.txt
-|-- services/forecasting.py
-|-- services/data_processing.py
+|-- README.md
 |-- data/
 |   |-- uploads/
 |   |-- processed/
@@ -19,16 +18,23 @@ Day 1 establishes the Flask application foundation and navigation UI. Day 2 adds
 |   `-- sales_forecasting.db  (created on first run)
 |-- models/
 |-- services/
+|   |-- analytics.py
+|   |-- customer_analytics.py
+|   |-- data_processing.py
+|   `-- forecasting.py
 |-- static/
 |   |-- css/style.css
 |   `-- js/app.js
-`-- templates/
+|-- templates/
     |-- base.html
     |-- dashboard.html
+   |-- customer_analytics.html
    |-- forecasting.html
     |-- home.html
    |-- page.html
    `-- upload_data.html
+`-- tests/
+   `-- test_customer_analytics.py
 ```
 
 ## Run Locally
@@ -62,13 +68,13 @@ Open **Upload Data** in the sidebar and upload a CSV, XLSX, or JSON dataset up t
 
 The Dashboard and Analytics pages now load the newest cleaned CSV from `data/processed/`. They calculate total sales, orders, customers, products, average order value, and month-over-month sales growth. Chart.js renders daily, monthly, product, category, and regional sales charts. The analytics view also reports increasing, decreasing, or stable trends, monthly and (when enough dates exist) weekly patterns, generated insights, and daily anomalies detected with Isolation Forest.
 
-If the cleaned dataset does not contain a mapped date or sales/revenue field, the pages show a clear data requirement message. Forecasting and customer ML modules remain reserved for later days.
+If the cleaned dataset does not contain a mapped date or sales/revenue field, the pages show a clear data requirement message. Customer analytics is covered in Day 6 below.
 
 ## Day 4 Sales Forecasting
 
 The **Forecasting** page prepares the latest cleaned uploaded dataset by aggregating sales daily, weekly, or monthly. It uses ARIMA through `statsmodels` when enough historical observations are available, evaluates the model with MAE, RMSE, and MAPE on a holdout period, and displays historical and predicted sales together. Prophet is detected and used only when already available in the environment; otherwise it is listed as skipped without breaking the application. Successful forecasts are saved to `data/processed/forecast_results.json` and the Dashboard displays the saved forecast total.
 
-The sample dataset has only five dated rows, so it correctly shows an insufficient-history message instead of producing fake predictions. Forecasting does not include LSTM, customer segmentation, churn prediction, or report generation.
+The sample dataset has only five dated rows, so it correctly shows an insufficient-history message instead of producing fake predictions. Forecasting does not include report generation.
 
 ## Day 5 Advanced And Scenario Forecasting
 
@@ -76,17 +82,29 @@ The Forecasting page compares ARIMA, Prophet, and an optional TensorFlow/Keras L
 
 Install TensorFlow separately in an environment supported by TensorFlow to enable LSTM (`pip install tensorflow`). Prophet remains optional. The page lets users change demand increase/decrease, price change, and promotion-effect assumptions and charts Best, Expected, and Worst Case paths. These are explicitly simulated scenarios derived from the ensemble, not model forecasts, accuracy claims, or guarantees. A successful ensemble is saved to `data/processed/forecast_results.json` and shown on the Dashboard.
 
-The bundled sample still has only five rows and does not meet the forecasting minimums, so the application correctly reports insufficient history instead of showing invented predictions. Customer segmentation, churn prediction, and report generation remain out of scope.
+The bundled sample still has only five rows and does not meet the forecasting minimums, so the application correctly reports insufficient history instead of showing invented predictions. Report generation remains out of scope.
+
+## Day 6 Customer Analytics
+
+The **Customers** page uses the latest cleaned upload when it contains customer and transaction fields. It calculates per-customer recency, purchase frequency, monetary value, average order value, and quantity, then standardizes the varying features and selects between two and five K-Means clusters using silhouette scoring. Cluster sizes, median characteristics, value-based descriptions, and an average-order-value versus recency plot are shown on the page. The Dashboard adds a segment-size chart when customer segments are available.
+
+Churn risk uses two classifiers: Logistic Regression and Random Forest. Training labels are derived only from historical snapshots with a complete 90-day forward window; a customer is labeled inactive when no purchase appears during that window. The page shows low (<33%), medium (33–<67%), and high (>=67%) probability bands, each model's counts, combined customer probabilities, and feature factors learned by both models. Training is withheld unless there are at least 20 snapshots across five customers and both historical outcomes. Missing fields, insufficient history, or single-class history produce an explanation instead of fabricated scores. Quantity is omitted when it has no variation or is unavailable.
+
+The bundled `sample_sales.csv` contains customer names and can produce K-Means segments for its four customers; its five rows do not provide enough history for churn training, so churn remains unavailable. Tests also use a deterministic in-memory customer transaction history in `tests/test_customer_analytics.py` to exercise both churn models, K-Means, and missing/insufficient-data behavior:
+
+```powershell
+python -m unittest discover -s tests -p "test_customer_analytics.py"
+```
+
+To see customer results in the app, upload and clean a transaction file with a customer ID or name, a transaction date, and a sales/revenue/amount field. Unit price can be used only when quantity is also present; quantity and order ID improve the derived features when available.
 
 ## Git Commands
 
 ```powershell
-git init
+git status
 git add .
-git commit -m "Day 1 - Project setup and basic UI"
-git branch -M main
-git remote add origin YOUR_GITHUB_REPOSITORY_URL
-git push -u origin main
+git commit -m "DAY 6 — CUSTOMER ANALYTICS"
+git push origin main
 ```
 
-If Git is already initialized, skip `git init`. Replace `YOUR_GITHUB_REPOSITORY_URL` with the repository URL before pushing.
+The repository is already connected to `origin` on `main`.

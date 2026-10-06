@@ -16,6 +16,7 @@ from services.data_processing import (
     validate_upload,
 )
 from services.analytics import analyze_dataset, latest_cleaned_dataset
+from services.customer_analytics import analyze_customers
 from services.forecasting import latest_forecast, load_forecast, save_forecast
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -101,8 +102,9 @@ def home():
 def dashboard():
     _path, dataframe = latest_cleaned_dataset(PROCESSED_DIR)
     analysis = analyze_dataset(dataframe) if dataframe is not None else {"error": "Upload and clean a dataset to populate the dashboard."}
+    customer_analysis = analyze_customers(dataframe)
     forecast = load_forecast(PROCESSED_DIR)
-    return render_template("dashboard.html", active_page="dashboard", page_title="Dashboard", analysis=analysis, forecast=forecast)
+    return render_template("dashboard.html", active_page="dashboard", page_title="Dashboard", analysis=analysis, forecast=forecast, customer_analysis=customer_analysis)
 
 
 @app.route("/upload-data", methods=["GET", "POST"])
@@ -205,7 +207,14 @@ def analytics():
 
 @app.route("/customers")
 def customers():
-    return render_template("page.html", active_page="customers", page_title="Customers", description="Customer records and segmentation views will be added in a later phase.")
+    _path, dataframe = latest_cleaned_dataset(PROCESSED_DIR)
+    customer_analysis = analyze_customers(dataframe)
+    return render_template(
+        "customer_analytics.html",
+        active_page="customers",
+        page_title="Customer Analytics",
+        customer_analysis=customer_analysis,
+    )
 
 
 @app.route("/products")

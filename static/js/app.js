@@ -37,6 +37,49 @@ document.addEventListener("DOMContentLoaded", () => {
         makeChart("regionSalesChart", "bar", window.dashboardCharts.region, "Regional sales");
     }
 
+    if (window.Chart && window.dashboardCustomerSegments) {
+        new Chart(document.getElementById("dashboardCustomerSegmentsChart"), {
+            type: "doughnut",
+            data: {
+                labels: window.dashboardCustomerSegments.map((segment) => segment.label),
+                datasets: [{ data: window.dashboardCustomerSegments.map((segment) => segment.size), backgroundColor: ["#187f78", "#5f9eb7", "#e79252", "#8472b5", "#d45d5d"] }],
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } },
+        });
+    }
+
+    if (window.Chart && window.customerAnalytics) {
+        const segmentation = window.customerAnalytics.segmentation;
+        if (segmentation.available) {
+            const colors = ["#187f78", "#5f9eb7", "#e79252", "#8472b5", "#d45d5d"];
+            new Chart(document.getElementById("customerSegmentSizesChart"), {
+                type: "bar",
+                data: {
+                    labels: segmentation.cluster_sizes.map((segment) => segment.label),
+                    datasets: [{ label: "Customers", data: segmentation.cluster_sizes.map((segment) => segment.size), backgroundColor: colors }],
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+            });
+            const points = segmentation.scatter;
+            const clusterNames = [...new Set(points.map((point) => point.cluster))];
+            new Chart(document.getElementById("customerScatterChart"), {
+                type: "scatter",
+                data: { datasets: clusterNames.map((cluster, index) => ({
+                    label: cluster,
+                    data: points.filter((point) => point.cluster === cluster).map((point) => ({ x: point.x, y: point.y })),
+                    backgroundColor: colors[index % colors.length],
+                    pointRadius: 4,
+                })) },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { tooltip: { callbacks: { label: (context) => `${context.dataset.label}: $${context.parsed.x.toFixed(2)} average order value, ${context.parsed.y} days recency` } } },
+                    scales: { x: { title: { display: true, text: "Average order value ($)" }, beginAtZero: true }, y: { title: { display: true, text: "Recency (days)" }, beginAtZero: true } },
+                },
+            });
+        }
+    }
+
     if (window.Chart && window.forecastData && !window.forecastData.error) {
         const historical = window.forecastData.historical;
         const predicted = window.forecastData.forecast;
